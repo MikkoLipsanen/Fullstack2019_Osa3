@@ -1,1 +1,1 @@
-Application available online at https://young-lowlands-22789.herokuapp.com/api/persons
+Application available online at https://young-lowlands-22789.herokuapp.com
