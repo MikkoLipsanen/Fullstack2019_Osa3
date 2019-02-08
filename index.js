@@ -55,9 +55,7 @@ app.post('/api/persons', (request, response) => {
   const body = request.body
 
   if (body.name === undefined) {
-    return response.status(400).json({ 
-      error: 'name missing' 
-    })
+    return response.status(400).json({ error: 'name missing' })
   }
 
   if (body.number === undefined) {
@@ -66,21 +64,14 @@ app.post('/api/persons', (request, response) => {
     })
   }
   
-  if (persons.some(p => p.name === body.name)){
-    return response.status(400).json({ 
-      error: 'name must be unique' 
-    })
-  }
-  
-  const person = {
-    id: getRandomInt(10000),
+  const person = new Person ({
     name: body.name,
     number: body.number,
-  }
+  })
   
-  persons = persons.concat(person)
-  
-  response.json(person)
+  person.save().then(savedPerson => {
+    response.json(savedPerson.toJSON())
+  })
 })
 
 
