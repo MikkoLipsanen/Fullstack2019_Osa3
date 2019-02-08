@@ -1,8 +1,10 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 var morgan  = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 app.use(bodyParser.json())
 
@@ -14,32 +16,12 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :n
 
 app.use(express.static('build'))
 
-let persons = [
-  {
-    id: 1,
-    name: 'Arto Hellas',
-    number: '044-87651',
-  },
-  {
-    id: 2,
-    name: 'Arto Järvinen',
-    number: '045-87651',
-  },
-  {
-    id: 3,
-    name: 'Lea Kutvonen',
-    number: '046-87651',
-  },
-  {
-    id: 4,
-    name: 'Martti Tienari',
-    number: '447-87651',
-  },
-]
 
-app.get('/api/persons', (req, res) => {
-    res.json(persons)
-})
+app.get('/api/persons', (request, response) => {
+  Person.find({}).then(people => {
+    response.json(people.map(person => person.toJSON()))
+  });     
+});
   
 app.get('/info', (req, res) => {
     const content = `
@@ -53,15 +35,10 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-    
-    if (person) {
-      response.json(person)
-    } else {
-      response.status(404).end()
-    }
-  })
+  Person.findById(request.params.id).then(person =>
+    response.json(person.toJSON())
+  )
+})
 
 app.delete('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id);
@@ -107,7 +84,7 @@ app.post('/api/persons', (request, response) => {
 })
 
 
-  const PORT = process.env.PORT || 3001
+  const PORT = process.env.PORT
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
   })
