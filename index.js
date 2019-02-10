@@ -16,52 +16,57 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :n
 
 app.use(express.static('build'))
 
-
-app.get('/api/persons', (request, response) => {
-  Person.find({}).then(people => {
-    response.json(people.map(person => person.toJSON()))
-  });     
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then(people => {
+      response.json(people.map(person => person.toJSON()))
+    })
+    .catch(error => next(error))     
 });
   
-app.get('/info', (req, res) => {
+app.get('/info', (request, response) => {
     const content = `
       <div>
         <p>Puhelinluettelossa ${persons.length} henkilön tiedot</p>
         <p>${new Date()}</p>
       </div>
     `
-    res.send(content)
-  
+    response.send(content) 
 })
 
-app.get('/api/persons/:id', (request, response) => {
-  Person.findById(request.params.id).then(person =>
-    response.json(person.toJSON())
-  )
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if(person) {
+        response.json(person.toJSON())
+      } else {
+        response.status(204).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
       response.status(204).end()
     })
+    .catch(error => next(error))
 });
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
-
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (body.name === undefined) {
-    return response.status(400).json({ error: 'name missing' })
+    const error = new Error('name missing') 
+    error.httpStatusCode = 400
+    return next(error)
   }
 
   if (body.number === undefined) {
-    return response.status(400).json({ 
-      error: 'number missing' 
-    })
+    const error = new Error('number missing') 
+    error.httpStatusCode = 400
+    return next(error)
   }
   
   const person = new Person ({
@@ -72,10 +77,22 @@ app.post('/api/persons', (request, response) => {
   person.save().then(savedPerson => {
     response.json(savedPerson.toJSON())
   })
+  .catch(error => next(error))
 })
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
-  const PORT = process.env.PORT
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-  })
+  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
