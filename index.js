@@ -25,13 +25,19 @@ app.get('/api/persons', (request, response, next) => {
 });
   
 app.get('/info', (request, response) => {
-    const content = `
-      <div>
-        <p>Puhelinluettelossa ${persons.length} henkilön tiedot</p>
-        <p>${new Date()}</p>
-      </div>
+  Person.find({})
+  .then(people => {
+    const count = people.length
+  
+  const content = `
+    <div>
+      <p>Puhelinluettelossa ${count} henkilön tiedot</p>
+      <p>${new Date()}</p>
+    </div>
     `
-    response.send(content) 
+  response.send(content) 
+  })
+  .catch(error => next(error))  
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
