@@ -7,9 +7,9 @@ const url =
 
 mongoose.connect(url, { useNewUrlParser: true })
 
-const personSchema = new mongoose.Schema({
+const personSchema = mongoose.Schema({
   name: String,
-  number: String,
+  number: String
 })
 
 const Person = mongoose.model('Person', personSchema)
