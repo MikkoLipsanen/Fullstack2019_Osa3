@@ -23,23 +23,23 @@ app.get('/api/persons', (request, response, next) => {
     .then(people => {
       response.json(people.map(person => person.toJSON()))
     })
-    .catch(error => next(error))     
-});
-  
+    .catch(error => next(error))
+})
+
 app.get('/info', (request, response) => {
   Person.find({})
-  .then(people => {
-    const count = people.length
-  
-  const content = `
+    .then(people => {
+      const count = people.length
+
+      const content = `
     <div>
       <p>Puhelinluettelossa ${count} henkilön tiedot</p>
       <p>${new Date()}</p>
     </div>
     `
-  response.send(content) 
-  })
-  .catch(error => next(error))  
+      response.send(content)
+    })
+    .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -56,7 +56,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then(result => {
+    .then(response => {
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -70,7 +70,7 @@ app.put('/api/persons/:id', (request, response, next) => {
     number: body.number,
   }
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true})
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
     .then(updatedPerson => {
       response.json(updatedPerson.toJSON())
     })
@@ -79,12 +79,10 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  
   const person = new Person ({
     name: body.name,
     number: body.number,
   })
-  
   person.save()
     .then(savedPerson => {
       response.json(savedPerson.toJSON())
@@ -95,7 +93,7 @@ app.post('/api/persons', (request, response, next) => {
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
